@@ -5,6 +5,9 @@ on:
     - cron: "*/20 * * * *"
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 concurrency:
   group: greece-watch
   cancel-in-progress: false
