@@ -192,9 +192,13 @@ async def poll_once(client, conn, notify_fn) -> list[dict]:
                        VALUES (?,?,?,?,?,?,?,?)""",
                     (cid, event_id, m.get("question", ""), label, price, price, ts, ts))
                 conn.commit()
-                if not is_new_event and price is not None:
+                # 2026-07-22: Polymarket seeds no default price for a brand-new
+                # outcome (confirmed via docs) -- notify either way instead of
+                # silently dropping the alert when there's no price yet.
+                if not is_new_event:
+                    price_display = f"{price:.0%}" if price is not None else "δεν υπάρχει ακόμα (καμία τιμή)"
                     message = (f"\U0001F1EC\U0001F1F7 Νέα επιλογή "
-                               f"στο '{title}': {label} (Yes: {price:.0%})")
+                               f"στο '{title}': {label} (Yes: {price_display})")
                     delivered = await _record_and_notify(conn, notify_fn, ts, "NEW_CANDIDATE", event_id, cid, message)
                     sent.append({"kind": "NEW_CANDIDATE", "delivered": delivered, "message": message})
                 continue
